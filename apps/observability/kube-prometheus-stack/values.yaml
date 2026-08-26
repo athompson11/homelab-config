@@ -1,6 +1,8 @@
 kube-prometheus-stack:
   crds:
-    enabled: true
+    # CRDs were installed during manual bootstrap; Argo manages the stack resources,
+    # not kube-prometheus-stack's oversized CRD payloads.
+    enabled: false
 
   windowsMonitoring:
     enabled: false
