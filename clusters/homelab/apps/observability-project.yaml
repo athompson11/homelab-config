@@ -8,7 +8,7 @@ metadata:
 spec:
   description: Internal observability stack for the homelab cluster
   sourceRepos:
-    - https://github.com/REPLACE_ME/homelab-config.git
+    - https://github.com/athompson11/homelab-config
   destinations:
     - namespace: observability
       server: https://kubernetes.default.svc

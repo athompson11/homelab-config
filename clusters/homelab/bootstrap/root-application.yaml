@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/REPLACE_ME/homelab-config.git
+    repoURL: https://github.com/athompson11/homelab-config
     targetRevision: main
     path: clusters/homelab/apps
   destination:
