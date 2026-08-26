@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homelab-kube-prometheus-stack
+description: Homelab kube-prometheus-stack wrapper chart for Argo CD
+version: 0.1.0
+type: application
+dependencies:
+  - name: kube-prometheus-stack
+    version: 88.5.4
+    repository: https://prometheus-community.github.io/helm-charts

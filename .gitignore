@@ -1,0 +1,10 @@
+# Local editor/tooling state
+*.swp
+.DS_Store
+
+# Helm dependency caches; Chart.lock is committed, charts are fetched by Argo/Helm.
+**/charts/
+*.tgz
+
+# Local bootstrap render scratch
+.tmp/

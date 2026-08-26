@@ -1,0 +1,110 @@
+kube-prometheus-stack:
+  crds:
+    enabled: true
+
+  windowsMonitoring:
+    enabled: false
+
+  alertmanager:
+    enabled: true
+    ingress:
+      enabled: false
+    service:
+      type: ClusterIP
+    alertmanagerSpec:
+      replicas: 1
+      retention: 120h
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+
+  grafana:
+    enabled: true
+    defaultDashboardsTimezone: browser
+    ingress:
+      enabled: false
+    service:
+      type: ClusterIP
+    persistence:
+      enabled: true
+      type: sts
+      storageClassName: longhorn
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+    grafana.ini:
+      analytics:
+        reporting_enabled: false
+        check_for_updates: false
+      security:
+        # Keep false while Grafana is internal-only and accessed by kubectl port-forward.
+        # Re-enable when an HTTPS Traefik Ingress is added.
+        cookie_secure: false
+        strict_transport_security: false
+      users:
+        allow_sign_up: false
+
+  prometheus:
+    enabled: true
+    ingress:
+      enabled: false
+    service:
+      type: ClusterIP
+    prometheusSpec:
+      replicas: 1
+      retention: 14d
+      retentionSize: 45GiB
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      probeSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+      scrapeConfigSelectorNilUsesHelmValues: false
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: longhorn
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 50Gi
+
+  prometheusOperator:
+    admissionWebhooks:
+      enabled: true
+      patch:
+        enabled: true
+
+  # Talos does not run kube-proxy in this cluster state.
+  kubeProxy:
+    enabled: false
+
+  # Keep the simple, reliable baseline enabled first. Talos control-plane static pod
+  # metrics need intentional endpoint/certificate exposure; leave those off to avoid
+  # false-down targets in the initial stack.
+  kubeApiServer:
+    enabled: true
+  kubelet:
+    enabled: true
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+
+  nodeExporter:
+    enabled: true
+  prometheus-node-exporter:
+    releaseLabel: true
+
+  kubeStateMetrics:
+    enabled: true
+  kube-state-metrics:
+    releaseLabel: true

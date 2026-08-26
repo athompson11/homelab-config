@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homelab-metrics-server
+description: Homelab metrics-server wrapper chart for Argo CD
+version: 0.1.0
+type: application
+dependencies:
+  - name: metrics-server
+    version: 3.14.0
+    repository: https://kubernetes-sigs.github.io/metrics-server/

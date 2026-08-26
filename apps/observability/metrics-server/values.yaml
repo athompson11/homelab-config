@@ -1,0 +1,27 @@
+metrics-server:
+  replicas: 1
+
+  # Prefer node InternalIP addresses on the isolated Talos LAN.
+  defaultArgs:
+    - --cert-dir=/tmp
+    - --kubelet-preferred-address-types=InternalIP,Hostname
+    - --kubelet-use-node-status-port
+    - --metric-resolution=15s
+
+  service:
+    type: ClusterIP
+
+  metrics:
+    enabled: true
+
+  serviceMonitor:
+    enabled: false
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
