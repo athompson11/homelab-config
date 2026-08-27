@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: streisandeffect-web
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  project: streisandeffect
+  source:
+    repoURL: https://github.com/athompson11/homelab-config
+    targetRevision: main
+    path: apps/streisandeffect/web
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: streisandeffect
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

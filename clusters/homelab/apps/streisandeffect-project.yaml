@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: streisandeffect
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  description: Public streisandeffect.org archive site
+  sourceRepos:
+    - https://github.com/athompson11/homelab-config
+  destinations:
+    - namespace: streisandeffect
+      server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

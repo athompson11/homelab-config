@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: streisandeffect-web
+  namespace: streisandeffect
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - streisandeffect.org
+      secretName: streisandeffect-org-tls
+  rules:
+    - host: streisandeffect.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: streisandeffect-web
+                port:
+                  name: http
