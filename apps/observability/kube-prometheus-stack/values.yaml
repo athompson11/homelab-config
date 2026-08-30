@@ -29,10 +29,21 @@ kube-prometheus-stack:
   grafana:
     enabled: true
     defaultDashboardsTimezone: browser
+    admin:
+      existingSecret: observability-grafana
+      userKey: admin-user
+      passwordKey: admin-password
     ingress:
       enabled: false
     service:
-      type: ClusterIP
+      # Internal-only dashboard access on the Talos/OPNsense LAN.
+      # Not routed through the public Traefik/OPNsense 80/443 port-forward.
+      annotations:
+        metallb.io/address-pool: ingress-pool
+      type: LoadBalancer
+      loadBalancerIP: 10.10.0.101
+      loadBalancerSourceRanges:
+        - 10.10.0.0/24
     persistence:
       enabled: true
       type: sts
