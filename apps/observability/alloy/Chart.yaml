@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homelab-alloy
+description: Homelab Alloy wrapper chart for Kubernetes log collection into Loki
+version: 0.1.0
+type: application
+dependencies:
+  - name: alloy
+    version: 1.12.1
+    repository: https://grafana.github.io/helm-charts

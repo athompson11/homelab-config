@@ -62,6 +62,16 @@ kube-prometheus-stack:
         strict_transport_security: false
       users:
         allow_sign_up: false
+    additionalDataSources:
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        url: http://loki-gateway.observability.svc.cluster.local
+        isDefault: false
+        editable: true
+        jsonData:
+          maxLines: 1000
 
   prometheus:
     enabled: true

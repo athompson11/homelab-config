@@ -1,0 +1,9 @@
+apiVersion: v2
+name: homelab-loki
+description: Homelab Loki wrapper chart for Argo CD
+version: 0.1.0
+type: application
+dependencies:
+  - name: loki
+    version: 7.3.0
+    repository: https://grafana.github.io/helm-charts

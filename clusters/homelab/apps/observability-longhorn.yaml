@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: observability-longhorn
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "35"
+spec:
+  project: observability
+  source:
+    repoURL: https://github.com/athompson11/homelab-config
+    targetRevision: main
+    path: apps/observability/longhorn
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

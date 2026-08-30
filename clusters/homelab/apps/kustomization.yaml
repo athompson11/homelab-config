@@ -5,6 +5,9 @@ resources:
   - observability-namespace.yaml
   - observability-metrics-server.yaml
   - observability-kube-prometheus-stack.yaml
+  - observability-loki.yaml
+  - observability-longhorn.yaml
+  - observability-alloy.yaml
   - streisandeffect-project.yaml
   - streisandeffect-namespace.yaml
   - streisandeffect-web.yaml
