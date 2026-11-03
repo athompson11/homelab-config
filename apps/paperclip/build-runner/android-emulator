@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Run one bounded Android test session on the shared interactive runner.
+
+Usage: android-emulator -- COMMAND [ARGS...]
+Boots bb-api36, exports ANDROID_SERIAL, runs COMMAND, then stops the emulator.
+Build the APK first: this session holds the shared Android build lock.
+"""
+import fcntl
+import os
+import pwd
+from pathlib import Path
+import signal
+import subprocess
+import sys
+import time
+
+SDK = '/opt/android/sdk'
+SERIAL = 'emulator-5554'
+
+
+def stop(process):
+    if process is None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        process.wait(timeout=15)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait(timeout=10)
+
+
+def main():
+    if len(sys.argv) < 3 or sys.argv[1] != '--':
+        print(__doc__)
+        return 0 if sys.argv[1:] == ['--help'] else 2
+    if not os.access('/dev/kvm', os.R_OK | os.W_OK):
+        raise RuntimeError('KVM access missing; use a fresh runner SSH session after group changes')
+    env = dict(os.environ, ANDROID_HOME=SDK, ANDROID_SDK_ROOT=SDK,
+               ANDROID_SERIAL=SERIAL, ANDROID_AVD_HOME=str(Path(pwd.getpwuid(os.getuid()).pw_dir) / '.android/avd'))
+    env['PATH'] = SDK + '/platform-tools:' + env.get('PATH', '')
+    logs = Path.home() / '.cache/bb-android-emulator'
+    logs.mkdir(parents=True, exist_ok=True)
+    emulator = test = None
+    # ponytail: one shared VM/device; separate workers if concurrent QA is required.
+    with open('/run/lock/bb-android-build.lock', 'a') as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Android runner busy with a build/test session; defer through the task continuation.', file=sys.stderr)
+            return 75
+        devices = subprocess.check_output([SDK + '/platform-tools/adb', 'devices'], env=env, timeout=15, text=True)
+        if SERIAL in devices:
+            raise RuntimeError('Port 5554 already has a device; refusing to take over another session')
+        def interrupted(signum, frame):
+            raise SystemExit(128 + signum)
+        signal.signal(signal.SIGTERM, interrupted)
+        signal.signal(signal.SIGINT, interrupted)
+        with (logs / 'session.log').open('w') as log:
+            try:
+                emulator = subprocess.Popen([
+                    '/usr/bin/timeout', '--signal=TERM', '--kill-after=15s', '25m',
+                    SDK + '/emulator/emulator', '-avd', 'bb-api36', '-port', '5554',
+                    '-no-window', '-no-audio', '-no-snapshot', '-no-boot-anim',
+                    '-gpu', 'swiftshader', '-memory', '1536', '-cores', '2',
+                    '-camera-back', 'emulated', '-camera-front', 'emulated',
+                ], env=env, stdout=log, stderr=subprocess.STDOUT,
+                    start_new_session=True, pass_fds=(lock.fileno(),))
+                deadline = time.monotonic() + 240
+                while time.monotonic() < deadline:
+                    if emulator.poll() is not None:
+                        raise RuntimeError(f'Emulator exited; inspect {logs / "session.log"}')
+                    result = subprocess.run([SDK + '/platform-tools/adb', '-s', SERIAL,
+                                             'shell', 'getprop', 'sys.boot_completed'],
+                                            env=env, capture_output=True, text=True, timeout=15)
+                    if result.stdout.strip() == '1':
+                        break
+                    time.sleep(2)
+                else:
+                    raise RuntimeError(f'Boot exceeded 240 seconds; inspect {logs / "session.log"}')
+                print(f'Ready: {SERIAL}; API 36; shared lock held', flush=True)
+                test = subprocess.Popen(['/usr/bin/timeout', '--signal=TERM', '--kill-after=15s',
+                                         '20m', *sys.argv[2:]], env=env, start_new_session=True)
+                return test.wait(timeout=1230)
+            finally:
+                stop(test)
+                stop(emulator)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
